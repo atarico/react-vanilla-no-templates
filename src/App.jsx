@@ -6,28 +6,51 @@ const RANDOM_FACTS = 'https://catfact.ninja/fact'
 const URL_IMAGE = 'https://cataas.com/'
 
 export const App = () => {
-  const [fact, setFact] = useState('')
+  const [fact, setFact] = useState()
   const [imageUrl, setImageUrl] = useState()
 
+  // esto recupera el texto que hay que mostrar
   useEffect(() => {
-    fetch(RANDOM_FACTS)
-      .then((res) => res.json())
-      .then((data) => {
-        const { fact } = data
+    const fetchData = async () => {
+      try {
+        const response = await fetch(RANDOM_FACTS)
+        if (!response.ok) {
+          throw new Error('Failed to fetch random fact')
+        }
+        const { fact } = await response.json()
         setFact(fact)
+      } catch (error) {
+        console.error('Error:', error)
+      }
+    }
 
-        // const firstWord = fact.split(' ').slice(0, 3).join(' ')
-        const threeFirstWord = fact.split(' ', 3).join(' ')
-
-        fetch(`https://cataas.com/cat/says/${threeFirstWord}?json=true`)
-          .then((res) => res.json())
-          .then((response) => {
-            const { url } = response
-
-            setImageUrl(url)
-          })
-      })
+    fetchData()
   }, [])
+
+  // esto recupera la imagen
+  useEffect(() => {
+    const fetchCatImage = async () => {
+      try {
+        if (!fact) return
+        const threeFirstWords = fact.split(' ', 3).join(' ')
+        const response = await fetch(
+          `https://cataas.com/cat/says/${threeFirstWords}?json=true`
+        )
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch cat image')
+        }
+
+        const { url } = await response.json()
+        setImageUrl(url)
+      } catch (error) {
+        console.error('Error:', error)
+      }
+    }
+
+    fetchCatImage()
+  }, [fact])
+
   return (
     <main>
       <h1>App de gatitos</h1>
